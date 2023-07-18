@@ -228,8 +228,6 @@ jobs:
       - checkout
       - setup_remote_docker:
           docker_layer_caching: true
-      - gh/setup:
-          token: GITHUB_CREDS
       - run:
           name: Build Docker artifact
           command: docker build -t "cosmwasm/wasmd:${CIRCLE_TAG}" .
@@ -239,11 +237,13 @@ jobs:
       - run:
           name: gzip
           command: tar -zcvf ${BUILD_DIR}/wasmd-${CIRCLE_TAG}-linux-amd64.tar.gz -C ${BUILD_DIR} wasmd
+      - gh/setup:
+          token: GITHUB_CREDS
       - run:
           name: Create release
           command: |
             gh release create ${CIRCLE_TAG} ${BUILD_DIR}/wasmd-${CIRCLE_TAG}-linux-amd64.tar.gz \
-            --title "Release $CIRCLE_TAG" \
+            --title "$CIRCLE_TAG" \
             --notes "# Wasmd ${CIRCLE_TAG} Release
             See the [CHANGELOG](https://github.com/CosmWasm/wasmd/blob/${CIRCLE_TAG}/CHANGELOG.md) for details on the changes in this version.
             "
