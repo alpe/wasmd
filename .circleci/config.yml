@@ -231,8 +231,14 @@ jobs:
           name: Build Docker artifact
           command: docker build --pull -t "cosmwasm/wasmd:${CIRCLE_TAG}" .
       - run:
-          name: Fetch static artifact
-          command: docker create --name wasmd_temp "cosmwasm/wasmd:${CIRCLE_TAG}"; docker cp wasmd_temp:/usr/bin/wasmd  ${BUILD_DIR} ; docker rm -f wasmd_temp
+          name: Fetch static artifact 1/3
+          command: docker create --name wasmd_temp "cosmwasm/wasmd:${CIRCLE_TAG}"
+      - run:
+          name: Fetch static artifact 2/3
+          command: docker cp wasmd_temp:/usr/bin/wasmd  ${BUILD_DIR}
+      - run:
+          name: Fetch static artifact 3/3
+          command: docker rm -f wasmd_temp
       - run:
           name: gzip
           command: tar -zcvf ${BUILD_DIR}/wasmd-${CIRCLE_TAG}-linux-amd64.tar.gz -C ${BUILD_DIR} wasmd
