@@ -172,7 +172,8 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - checkout
-      - setup_remote_docker
+      - setup_remote_docker:
+          docker_layer_caching: true
       - run:
           name: Build Docker artifact
           command: docker build --pull -t "cosmwasm/wasmd:${CIRCLE_SHA1}" .
@@ -205,7 +206,8 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - checkout
-      - setup_remote_docker
+      - setup_remote_docker:
+          docker_layer_caching: true
       - run:
           name: Build Docker artifact
           command: docker build --pull -t "cosmwasm/wasmd:${CIRCLE_TAG}" .
@@ -219,12 +221,13 @@ jobs:
   release-tagged:
     executor: golang
     environment:
-      BUILD_DIR: /tmp/workspace/build
+      BUILD_DIR: /tmp/workspace
     steps:
       - attach_workspace:
           at: /tmp/workspace
       - checkout
-      - setup_remote_docker
+      - setup_remote_docker:
+          docker_layer_caching: true
       - gh/setup:
           token: GITHUB_CREDS
       - run:
@@ -235,7 +238,7 @@ jobs:
           command: docker create --name wasmd_temp "cosmwasm/wasmd:${CIRCLE_TAG}"
       - run:
           name: Fetch static artifact 2/3
-          command: docker cp wasmd_temp:/usr/bin/wasmd  ${BUILD_DIR}
+          command: docker cp wasmd_temp:/usr/bin/wasmd ${BUILD_DIR}
       - run:
           name: Fetch static artifact 3/3
           command: docker rm -f wasmd_temp
