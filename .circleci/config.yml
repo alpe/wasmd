@@ -238,7 +238,7 @@ jobs:
       - run:
           name: Create release
           command: |
-            gh release create ${CIRCLE_TAG} ${BUILD_DIR}/wasmd-${CIRCLE_TAG}-linux-amd64.tar.gz --title "Release $CIRCLE_TAG" --notes-file CHANGELOG.md
+            gh release create ${CIRCLE_TAG} ${BUILD_DIR}/wasmd-${CIRCLE_TAG}-linux-amd64.tar.gz --title "Release $CIRCLE_TAG" --notes-file CHANGELOG.md --token=${GITHUB_CREDS}
 
 workflows:
   test-suite:
@@ -257,12 +257,12 @@ workflows:
 #                - /.*/
 #          requires:
 #            - setup-dependencies
-      - setup-dependencies:
-          # filters here are needed to enable this job also for tags
-          filters:
-            tags:
-              only:
-                - /^v.*/
+#      - setup-dependencies:
+#          # filters here are needed to enable this job also for tags
+#          filters:
+#            tags:
+#              only:
+#                - /^v.*/
 
 #      - lint:
 #          requires:
