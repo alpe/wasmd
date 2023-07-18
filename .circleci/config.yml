@@ -232,7 +232,7 @@ jobs:
           token: GITHUB_CREDS
       - run:
           name: Build Docker artifact
-          command: docker build --pull -t "cosmwasm/wasmd:${CIRCLE_TAG}" .
+          command: docker build -t "cosmwasm/wasmd:${CIRCLE_TAG}" .
       - run:
           name: Fetch static artifact
           command: docker create --name wasmd_temp "cosmwasm/wasmd:${CIRCLE_TAG}"; docker cp wasmd_temp:/usr/bin/wasmd ${BUILD_DIR};  docker rm -f wasmd_temp
@@ -244,7 +244,9 @@ jobs:
           command: |
             gh release create ${CIRCLE_TAG} ${BUILD_DIR}/wasmd-${CIRCLE_TAG}-linux-amd64.tar.gz \
             --title "Release $CIRCLE_TAG" \
-            --notes "# Wasmd ${CIRCLE_TAG} Release\n\nSee the [CHANGELOG](https://github.com/CosmWasm/wasmd/blob/${CIRCLE_TAG}/CHANGELOG.md) for details on the changes in this version."
+            --notes "# Wasmd ${CIRCLE_TAG} Release
+            See the [CHANGELOG](https://github.com/CosmWasm/wasmd/blob/${CIRCLE_TAG}/CHANGELOG.md) for details on the changes in this version.
+            "
 
 workflows:
   test-suite:
