@@ -244,6 +244,7 @@ jobs:
           command: |
             gh release create ${CIRCLE_TAG} ${BUILD_DIR}/wasmd-${CIRCLE_TAG}-linux-amd64.tar.gz \
             --title "$CIRCLE_TAG" \
+            --draft \
             --notes "# Wasmd ${CIRCLE_TAG} Release
             See the [CHANGELOG](https://github.com/CosmWasm/wasmd/blob/${CIRCLE_TAG}/CHANGELOG.md) for details on the changes in this version.
             "
