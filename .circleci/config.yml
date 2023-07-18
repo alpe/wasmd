@@ -1,6 +1,6 @@
 version: 2.1
 orbs:
-  gh: circleci/github-cli@1.0
+  gh: circleci/github-cli@2.2.0
 
 executors:
   golang:
@@ -225,6 +225,7 @@ jobs:
           at: /tmp/workspace
       - checkout
       - setup_remote_docker
+      - gh/setup
       - run:
           name: Build Docker artifact
           command: docker build --pull -t "cosmwasm/wasmd:${CIRCLE_TAG}" .
@@ -233,17 +234,13 @@ jobs:
           command: docker create --name wasmd_temp "cosmwasm/wasmd:${CIRCLE_TAG}"; docker cp wasmd_temp:/usr/bin/wasmd  ${BUILD_DIR} ; docker rm -f wasmd_temp
       - run:
           name: gzip
-          command: tar -zcvf ${BUILD_DIR}/wasmd-$(CIRCLE_TAG)-linux-amd64.tar.gz -C ${BUILD_DIR} wasmd
-      - gh/release:
-          notes-file: changelog.md
-          tag: ${CIRCLE_TAG}
-          title: The ${CIRCLE_TAG} release
-          files: ${BUILD_DIR}/wasmd-$(CIRCLE_TAG)-linux-amd64.tar.gz
-          context:
-            - GITHUB_CREDS
+          command: tar -zcvf ${BUILD_DIR}/wasmd-${CIRCLE_TAG}-linux-amd64.tar.gz -C ${BUILD_DIR} wasmd
+      - run:
+          name: Create release
+          command: |
+            gh release create ${CIRCLE_TAG} ${BUILD_DIR}/wasmd-${CIRCLE_TAG}-linux-amd64.tar.gz --title "Release $CIRCLE_TAG" --notes-file CHANGELOG.md
 
 workflows:
-  version: 2
   test-suite:
     jobs:
 #      - docker-image:
@@ -266,6 +263,7 @@ workflows:
             tags:
               only:
                 - /^v.*/
+
 #      - lint:
 #          requires:
 #            - setup-dependencies
