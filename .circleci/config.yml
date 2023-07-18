@@ -1,4 +1,6 @@
 version: 2.1
+orbs:
+  gh: circleci/github-cli@1.0
 
 executors:
   golang:
@@ -170,8 +172,7 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - checkout
-      - setup_remote_docker:
-          version: 20.10.18
+      - setup_remote_docker
       - run:
           name: Build Docker artifact
           command: docker build --pull -t "cosmwasm/wasmd:${CIRCLE_SHA1}" .
@@ -188,7 +189,7 @@ jobs:
             fi
       - when:
           condition:
-            equal: [main, << pipeline.git.branch >>]
+            equal: [ main, << pipeline.git.branch >> ]
           steps:
             - run:
                 name: Push application Docker image to docker hub
@@ -204,9 +205,7 @@ jobs:
       - attach_workspace:
           at: /tmp/workspace
       - checkout
-      - setup_remote_docker:
-          # >= v20.10 https://wiki.alpinelinux.org/wiki/Release_Notes_for_Alpine_3.14.0#faccessat2
-          version: 20.10.11
+      - setup_remote_docker
       - run:
           name: Build Docker artifact
           command: docker build --pull -t "cosmwasm/wasmd:${CIRCLE_TAG}" .
@@ -217,13 +216,40 @@ jobs:
             docker push "cosmwasm/wasmd:${CIRCLE_TAG}"
             docker logout
 
+  release-tagged:
+    executor: golang
+    environment:
+      BUILD_DIR: /tmp/workspace/build
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Build Docker artifact
+          command: docker build --pull -t "cosmwasm/wasmd:${CIRCLE_TAG}" .
+      - run:
+          name: Fetch static artifact
+          command: docker create --name wasmd_temp "cosmwasm/wasmd:${CIRCLE_TAG}"; docker cp wasmd_temp:/usr/bin/wasmd  ${BUILD_DIR} ; docker rm -f wasmd_temp
+      - run:
+          name: gzip
+          command: tar -zcvf ${BUILD_DIR}/wasmd-$(CIRCLE_TAG)-linux-amd64.tar.gz -C ${BUILD_DIR} wasmd
+      - gh/release:
+          notes-file: changelog.md
+          tag: ${CIRCLE_TAG}
+          title: The ${CIRCLE_TAG} release
+          files: ${BUILD_DIR}/wasmd-$(CIRCLE_TAG)-linux-amd64.tar.gz
+          context:
+            - GITHUB_CREDS
+
 workflows:
   version: 2
   test-suite:
     jobs:
-      - docker-image:
-          requires:
-            - setup-dependencies
+      - docker-image
+#          requires:
+#            - test-system todo: publish after successful executions only
+#            - simulations
       - docker-tagged:
           filters:
             tags:
@@ -258,3 +284,13 @@ workflows:
       - simulations:
           requires:
             - setup-dependencies
+      - release-tagged:
+#          requires:
+#            - docker-tagged
+          filters:
+            tags:
+              only:
+                - /^v.*/
+            branches:
+              ignore:
+                - /.*/
